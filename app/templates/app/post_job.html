@@ -1,0 +1,51 @@
+{% extends 'app/base.html' %}
+{% load widget_tweaks %}
+
+{% block content %}
+
+    {% if user.is_authenticated %}
+        {% if user.userprofile %}
+        <div class="col text-center">
+            <h1 class="mb-3 mt-5">Post a Job</h1>
+        </div>
+
+        <div class="container col-xl-10 col-xxl-8 px-4 py-4">
+            <div class="col-md-10 mx-auto col-lg-5">
+
+                <form class="px-5 pb-3 pt-5 border rounded bg-light shadow-sm" method="post">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                    <div class="form-floating mb-3">
+                        <div class="alert alert-danger mb-0 text-center" role="alert">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% for field in form.visible_fields %}
+                    <div class="form-floating mb-3">
+                        {% if form.is_bound %}
+                            {% render_field field class="form-control is-invalid" placeholder="field.label_tag" %}
+                        {% else %}
+                            {% render_field field class="form-control" placeholder="field.label_tag" %}
+                        {% endif %}
+                        <label class="form-group col-form-label mb-0">{{ field.label_tag }}</label>
+                    </div>
+                    {% endfor %}
+
+                    <button class="w-100 btn btn-lg btn-primary" type="submit">Post</button>
+                    <hr class="my-4">
+                    <small class="text-muted text-center"><p>By clicking Post, you agree to the terms of use.</p></small>
+                </form>
+            </div>
+        </div>
+        {% else %}
+            <p>Your account doesn't have access to this page. Only Users can post a job.</p>
+        {% endif %}
+    {% endif %}
+
+{% endblock %}
+

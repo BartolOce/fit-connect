@@ -1,0 +1,159 @@
+{% extends "app/base.html" %}
+{% load widget_tweaks %}
+{% load static %} 
+
+{% block extrahead %}
+    <link rel="stylesheet" href="{% static 'app/css/jobs.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="container">
+        <div class="d-flex align-items-center text-white rounded shadow-sm bg-dark mt-5">
+            <div class="text-white px-4 py-3">
+                <h5 class="mb-0">Job List</h5>
+                <div class="card-text"><small>List of all available jobs</small></div>
+            </div>
+        </div>
+
+        {% if any_job_has_bid %}
+        <div class="row">
+            {% for job in jobs %}
+                {% if not job.has_bid %}
+                {% if job.status == 'published' %}
+                <div class="col-lg-4 py-3">
+                    <div class="rate card shadow-sm">
+                        <div class="rate card-header no-border">
+                            {% if job.title == 'consultations' %}
+                                <h5 class="card-title">CONSULTATIONS</h5>
+                            {% else %}
+                                <h5 class="card-title">TRAINING SESSION</h5>
+                            {% endif %}
+                        </div>
+                        <div class="card-body pt-0">
+                            <div class="widget-49">
+                                <div class="widget-49-title-wrapper">
+                                    <div class="widget-49-date-primary">
+                                        <span class="widget-49-date-day">{{ job.start_time|date:"d"}}</span>
+                                        <span class="widget-49-date-month">{{ job.start_time|date:"M"|upper}}</span>
+                                    </div>
+                                    <div class="widget-49-meeting-info">
+                                        <span class="widget-49-pro-title">{{ job.user.user.first_name }} {{ job.user.user.last_name}}</span>
+                                        <span class="widget-49-meeting-time">Started at: {{ job.start_time|time:"H:i"}}</span>
+                                    </div>
+                                </div>
+                                <div class="widget-49-meeting-points px-4" style="list-style-type: none;">
+                                    <p class="widget-49-meeting-item my-2 pb-2"><span>Job budget: {{ job.budget }}€</span><br><span>Description: {{ job.description }}</span></p>
+                                </div>
+                                <form method="post" action="{% url 'jobs_trainer' %}" class="px-1">
+                                    {% csrf_token %}
+        
+        
+                                    <input type="hidden" name="job_id" value="{{ job.id }}">
+        
+                                    {# Display error messages #}
+                                    {% if error_messages and job_id == job.id|stringformat:"d" %}
+                                    <div class="form-floating mb-3">
+                                            <div class="alert alert-danger mb-0 text-center" role="alert">
+                                            {% for error in error_messages %}
+                                                {{ error }}
+                                            {% endfor %}
+                                            </div>
+                                        </div>
+                                    {% endif %}
+        
+                    
+                                    {# Display all fields in form #}
+                                    {% if form.is_bound and job_id == job.id|stringformat:"d" %}
+                                        {% for field in form %}
+                                            {% if form.is_bound and job_id == job.id|stringformat:"d" %}
+                                                {% render_field field class="form-control is-invalid mb-2" %}
+                                            {% else %}
+                                                {% render_field field class="form-control" %}
+                                            {% endif %}
+                                        {% endfor %} 
+                                    {% else %}
+                                        {% for field in form_without_data %}
+                                            {% render_field field class="form-control mb-2" %}
+                                        {% endfor %} 
+                                    {% endif %}
+                    
+                                    <button class="w-100 btn btn-primary" type="submit">Submit Bid</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="row">
+            <div class="container-sm py-3">
+                <div class="card rounded shadow-sm py-5">
+                    <p class="text-center mb-0">There is no available jobs right now</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+
+    <div class="container">
+        <div class="card border-light my-3 bg-body rounded shadow-sm mt-5">
+            <div class="card-header text-white bg-dark px-4 py-3">
+                <h5 class="mb-0">Bid List</h5>
+                <div class="card-text"><small>List of all of your bids</small></div>
+            </div>
+            <div class="card-body p-4">
+                <table class="table table-striped table-bordered pb-2">
+                    <thead>
+                        <tr>
+                            <th>Start date and time</th>
+                            <th>Type</th>
+                            <th>Customer name</th>
+                            <th>Amount</th>
+                            <th>Status</th>    
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for bid in bids %}
+                            {% if bid.bidder == request.user.trainerprofile %}
+                            <tr>
+                                <td>{{ bid.job.start_time }}</td>
+                                <td>
+                                    {% if bid.job.title == 'consultations' %}
+                                        Consultations
+                                    {% else %}
+                                        Training session
+                                    {% endif %}
+                                </td>
+                                <td>{{ bid.job.user.user.first_name }} {{ bid.job.user.user.last_name}}</td>
+                                <td>{{ bid.price }}€</td>
+                                <td>
+                                    {% if bid.accepted and bid.completed %}
+                                        <span class="badge bg-success">Job is finished</span>
+                                    {% elif bid.declined %}
+                                        <span class="badge bg-danger">Bid is declined</span>
+                                    {% elif bid.disputed %}
+                                        <span class="badge bg-danger">Bid is disputed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Bid is sent</span>
+                                    {% endif %}
+                                </td> 
+                            </tr>
+                            {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <p class="mb-0">Showing {{ accepted_completed_bids }} entries</p>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+{% endblock content %}
